@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Second Lap Challenge | Nürburgring Nordschleife</title>
+<meta name="description" content="One car, two laps on the Nordschleife. Lap one finds the limit, lap two counts. Post your time and see where you stand.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏁</text></svg>">
+<style>
+:root{
+  --bg:#0d1712; --panel:#15231b; --row:#1a2b21; --line:#2a3d32;
+  --text:#e9efe9; --mute:#93a89a; --red:#e23a2e; --focus:#ffd34d;
+  --display:"Bahnschrift","DIN Condensed","Arial Narrow",Impact,sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 var(--body)}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+
+/* top bar */
+.bar{display:flex;justify-content:space-between;align-items:center;padding:14px 0;gap:12px}
+.bar b{font-family:var(--display);font-size:1.1rem;letter-spacing:.02em}
+.who{display:flex;align-items:center;gap:10px;font-size:.95rem}
+
+/* hero */
+.hero{padding:40px 0 34px;border-bottom:1px solid var(--line)}
+.kerb{height:14px;margin-bottom:26px;background:repeating-linear-gradient(90deg,var(--red) 0 38px,#f4f4f0 38px 76px)}
+h1{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(3rem,13vw,8.5rem);line-height:.88;letter-spacing:-.01em}
+.hero p{max-width:52ch;margin:22px 0 0;font-size:1.15rem;color:var(--mute)}
+.hero p strong{color:var(--text);font-weight:600}
+.cta{margin-top:24px;display:flex;gap:12px;flex-wrap:wrap}
+
+/* buttons */
+button,.btn{font:inherit;cursor:pointer;border-radius:4px;padding:10px 18px;border:1px solid var(--line);background:transparent;color:var(--text)}
+button:hover{border-color:var(--mute)}
+.primary{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+.primary:hover{background:#f0493c;border-color:#f0493c}
+
+/* filters */
+.filters{display:flex;gap:12px;flex-wrap:wrap;padding:26px 0 14px}
+label{display:block;font-size:.9rem;color:var(--mute);margin-bottom:4px}
+select,input[type=text],input[type=url]{width:100%;font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px}
+.filters div{flex:1 1 220px}
+
+/* leaderboard */
+.board{width:100%;border-collapse:collapse}
+.board th{text-align:left;font-weight:500;color:var(--mute);font-size:.9rem;padding:8px 10px;border-bottom:1px solid var(--line)}
+.board td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.board tr:nth-child(even) td{background:var(--row)}
+.pos{font-family:var(--display);font-size:1.3rem;width:3.2rem}
+.time{font-family:var(--display);font-size:1.35rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sub{display:block;color:var(--mute);font-size:.85rem}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:3px;padding:0 6px;font-size:.8rem;color:var(--mute);margin-right:4px}
+.tag.ok{border-color:#3d7a52;color:#8fd3a5}
+.tag.off{border-color:#8a5a2b;color:#e0b070}
+.scroll{overflow-x:auto}
+.empty{padding:40px 10px;color:var(--mute)}
+
+/* rules */
+.rules{margin:44px 0;padding:24px;background:var(--panel);border-left:6px solid var(--red)}
+.rules h2{margin:0 0 8px;font-family:var(--display);font-size:1.6rem}
+.rules ul{margin:8px 0 0;padding-left:20px;color:var(--mute);max-width:70ch}
+footer{padding:20px 0 40px;color:var(--mute);font-size:.9rem}
+
+/* dialogs */
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:24px;width:min(520px,94vw)}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+dialog h2{margin:0 0 14px;font-family:var(--display);font-size:1.6rem}
+.f{margin-bottom:12px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.checks{display:flex;gap:16px;flex-wrap:wrap}
+.checks label{display:flex;align-items:center;gap:6px;color:var(--text);margin:0}
+.msg{min-height:1.4em;color:#ff8b80;margin:8px 0}
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+.hint{font-size:.85rem;color:var(--mute);margin-top:4px}
+.hidden{display:none}
+@media (prefers-reduced-motion:no-preference){.kerb{animation:slide 1.1s ease-out}@keyframes slide{from{transform:scaleX(0);transform-origin:left}}}
+@media (max-width:640px){.col-hide{display:none}.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <b>secondlap.racing</b>
+    <div class="who" id="who"></div>
+  </div>
+
+  <header class="hero">
+    <div class="kerb" aria-hidden="true"></div>
+    <h1>Second Lap<br>Challenge</h1>
+    <p>Every car, <strong>two laps</strong> on the Nürburgring Nordschleife. The first lap finds the limit. The second one counts, even if you end up in the grass.</p>
+    <div class="cta"><button class="primary" id="btnSubmit">Post your time</button></div>
+  </header>
+
+  <main>
+    <div class="filters">
+      <div><label for="fCar">Car</label><select id="fCar"><option value="">All cars (overall)</option></select></div>
+      <div><label for="fPlat">Platform</label><select id="fPlat"><option value="">PC + consoles</option></select></div>
+    </div>
+    <div class="scroll"><div id="lb" class="empty">Loading times…</div></div>
+
+    <section class="rules">
+      <h2>How the times are set</h2>
+      <ul><!-- EDIT: write your exact standard here -->
+        <li>Nordschleife only. Lap 1 is for finding the limit and is not recorded.</li>
+        <li>Lap 2 is the one you post, off-track or not.</li>
+        <li>Stock car, default setup, same conditions for everyone.</li>
+        <li>Nobody checks, so be honest. A video link gets a ▶ next to your time.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>Free and just for fun. No prizes, no fees.</footer>
+</div>
+
+<!-- Login -->
+<dialog id="dLogin">
+  <h2>Log in</h2>
+  <p class="hint" style="margin-bottom:14px">You need an account to post a time. Browsing is open to everyone.</p>
+  <div class="actions" style="justify-content:flex-start;flex-wrap:wrap">
+    <button class="primary" data-provider="discord">Continue with Discord</button>
+    <button data-provider="google">Continue with Google</button>
+  </div>
+  <div class="msg" id="loginMsg" role="alert"></div>
+  <div class="actions"><button data-close>Close</button></div>
+</dialog>
+
+<!-- Profile -->
+<dialog id="dProfile">
+  <h2>Choose your name</h2>
+  <form id="fProfile">
+    <div class="f"><label for="pNick">Nickname (3 to 24 characters)</label><input type="text" id="pNick" minlength="3" maxlength="24" required></div>
+    <div class="f"><label for="pCountry">Country</label><select id="pCountry" required></select></div>
+    <div class="msg" id="profMsg" role="alert"></div>
+    <div class="actions"><button type="button" data-close>Later</button><button class="primary">Save profile</button></div>
+  </form>
+</dialog>
+
+<!-- Submit -->
+<dialog id="dSubmit">
+  <h2>Post your time</h2>
+  <form id="fSubmit">
+    <div class="row2">
+      <div class="f"><label for="sPlat">Platform</label><select id="sPlat" required></select></div>
+      <div class="f"><label for="sCar">Car</label><select id="sCar" required></select></div>
+    </div>
+    <div id="newCar" class="hidden">
+      <div class="f"><label for="sNewName">New car name (brand, model, version)</label><input type="text" id="sNewName" maxlength="60" placeholder="Volkswagen Golf V GTI"></div>
+      <div class="checks f"><label><input type="checkbox" id="sMod"> This car is a mod</label></div>
+    </div>
+    <div class="row2">
+      <div class="f"><label for="sTime">Lap 2 time (m:ss.mmm)</label><input type="text" id="sTime" placeholder="7:21.345" inputmode="decimal" required></div>
+      <div class="f"><label for="sCtrl">Controller</label>
+        <select id="sCtrl" required>
+          <option value="wheel_dd">Wheel, direct drive</option>
+          <option value="wheel_belt">Wheel, belt</option>
+          <option value="wheel_gear">Wheel, gear</option>
+          <option value="gamepad">Gamepad</option>
+          <option value="keyboard">Keyboard</option>
+        </select></div>
+    </div>
+    <div class="f"><label for="sWheel">Wheel or pad model (optional)</label><input type="text" id="sWheel" maxlength="60" placeholder="Fanatec DD Pro"></div>
+    <div class="checks f">
+      <label><input type="checkbox" id="sAbs"> ABS on</label>
+      <label><input type="checkbox" id="sTc"> Traction control on</label>
+      <label><input type="checkbox" id="sSc"> Stability control on</label>
+    </div>
+    <div class="checks f"><label><input type="checkbox" id="sStd" checked> I followed the standard (stock car, default setup)</label></div>
+    <div class="f"><label for="sVid">Video link (optional, https only)</label><input type="url" id="sVid" placeholder="https://youtube.com/..."></div>
+    <div class="msg" id="subMsg" role="alert"></div>
+    <div class="actions"><button type="button" data-close>Cancel</button><button class="primary">Post time</button></div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const sb = supabase.createClient('https://spcvxrdazjruljbwfbay.supabase.co','sb_publishable_07wLZzuFwr3ean7__eS4Qw_z1-4-Uoj');
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const S = { game:null, layout:null, platforms:[], cars:[], user:null, profile:null };
+const CTRL = { wheel_dd:'Direct drive wheel', wheel_belt:'Belt wheel', wheel_gear:'Gear wheel', gamepad:'Gamepad', keyboard:'Keyboard' };
+const CODES = 'AL AT BE BG BA BY CH CY CZ DE DK EE ES FI FR GB GR HR HU IE IS IT LT LU LV MD ME MK MT NL NO PL PT RO RS RU SE SI SK TR UA XK US CA MX BR AR CL CO PE VE UY AU NZ JP KR CN IN ID MY PH SG TH VN ZA EG MA NG KE IL AE SA QA'.split(' ');
+
+const fmt = ms => `${Math.floor(ms/60000)}:${String(Math.floor(ms%60000/1000)).padStart(2,'0')}.${String(ms%1000).padStart(3,'0')}`;
+function parseTime(t){
+  const m = /^(\d{1,2}):(\d{2})\.(\d{1,3})$/.exec(t.trim());
+  if(!m || +m[2] > 59) return null;
+  return +m[1]*60000 + +m[2]*1000 + +m[3].padEnd(3,'0');
+}
+const safeUrl = u => { try{ const x = new URL(u); return x.protocol==='https:' ? x.href : null }catch{ return null } };
+const countryName = c => { try{ return new Intl.DisplayNames(['en'],{type:'region'}).of(c) }catch{ return c } };
+
+/* ---------- data ---------- */
+async function init(){
+  const [g,p,l] = await Promise.all([
+    sb.from('games').select('*').eq('slug','ac').single(),
+    sb.from('platforms').select('*').order('id'),
+    sb.from('layouts').select('*')
+  ]);
+  if(g.error || p.error || l.error){ $('#lb').textContent = 'Could not load data. Refresh the page in a minute.'; return }
+  S.game = g.data; S.platforms = p.data; S.layout = l.data.find(x => x.game_id === S.game.id);
+  const opts = S.platforms.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('');
+  $('#fPlat').insertAdjacentHTML('beforeend', opts);
+  $('#sPlat').innerHTML = opts;
+  $('#pCountry').innerHTML = '<option value="">Select…</option>' + CODES.map(c => [c, countryName(c)]).sort((a,b)=>a[1].localeCompare(b[1])).map(([c,n]) => `<option value="${c}">${esc(n)}</option>`).join('');
+  await loadCars();
+  await loadBoard();
+  await refreshUser();
+}
+
+async function loadCars(){
+  const { data } = await sb.from('cars').select('id,name,is_official,is_mod').eq('game_id', S.game.id).order('name');
+  S.cars = data || [];
+  const cur = $('#fCar').value;
+  $('#fCar').innerHTML = '<option value="">All cars (overall)</option>' + S.cars.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  $('#fCar').value = cur;
+  fillSubmitCars();
+}
+
+async function loadBoard(){
+  let q = sb.from('leaderboard').select('*').eq('game_id', S.game.id).order('time_ms',{ascending:true}).limit(300);
+  if($('#fCar').value) q = q.eq('car_id', $('#fCar').value);
+  if($('#fPlat').value) q = q.eq('platform_id', $('#fPlat').value);
+  const { data, error } = await q;
+  const box = $('#lb');
+  if(error){ box.className='empty'; box.textContent='Could not load times.'; return }
+  if(!data.length){ box.className='empty'; box.textContent='No times here yet. Be the first one to post.'; return }
+  const car = id => S.cars.find(c => c.id === id) || {name:'Unknown car'};
+  const plat = id => (S.platforms.find(p => p.id === id) || {name:''}).name;
+  box.className = '';
+  box.innerHTML = `<table class="board"><thead><tr><th>#</th><th>Driver</th><th>Car</th><th>Time</th><th class="col-hide">Setup</th></tr></thead><tbody>` +
+    data.map((r,i) => {
+      const c = car(r.car_id), vid = safeUrl(r.video_url);
+      const aids = [r.abs && 'ABS', r.tc && 'TC', r.stability && 'SC'].filter(Boolean);
+      return `<tr>
+        <td class="pos">${i+1}</td>
+        <td>${esc(r.nickname)}<span class="sub">${esc(r.country)}</span></td>
+        <td>${esc(c.name)}${c.is_mod ? ' <span class="tag off">mod</span>' : ''}<span class="sub">${esc(plat(r.platform_id))}</span></td>
+        <td class="time">${fmt(r.time_ms)}${vid ? ` <a href="${esc(vid)}" target="_blank" rel="noopener noreferrer" title="Watch the lap" aria-label="Watch the lap">▶</a>` : ''}</td>
+        <td class="col-hide">${esc(CTRL[r.controller] || r.controller)}${r.wheel_model ? ' · ' + esc(r.wheel_model) : ''}
+          <span class="sub">${aids.length ? esc(aids.join(' ')) + ' on' : 'No assists'}${r.standard_followed ? '' : ' · <span class="tag off">non-standard</span>'}</span></td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+}
+
+/* ---------- auth ---------- */
+async function refreshUser(){
+  const { data:{ session } } = await sb.auth.getSession();
+  S.user = session ? session.user : null; S.profile = null;
+  if(S.user){
+    const { data } = await sb.from('profiles').select('*').eq('id', S.user.id).maybeSingle();
+    S.profile = data;
+  }
+  const who = $('#who');
+  if(!S.user) who.innerHTML = '<button id="btnLogin">Log in</button>';
+  else who.innerHTML = `<span>${S.profile ? esc(S.profile.nickname) : 'No nickname yet'}</span><button id="btnLogout">Log out</button>`;
+  if(S.user && !S.profile && !sessionStorage.getItem('profAsked')){ sessionStorage.setItem('profAsked','1'); $('#dProfile').showModal() }
+}
+sb.auth.onAuthStateChange(() => setTimeout(refreshUser, 0));
+
+document.addEventListener('click', async e => {
+  const t = e.target;
+  if(t.id === 'btnLogin') $('#dLogin').showModal();
+  if(t.id === 'btnLogout'){ await sb.auth.signOut(); sessionStorage.removeItem('profAsked') }
+  if(t.dataset.close !== undefined) t.closest('dialog').close();
+  if(t.dataset.provider){
+    const { error } = await sb.auth.signInWithOAuth({ provider: t.dataset.provider, options:{ redirectTo: location.origin } });
+    if(error) $('#loginMsg').textContent = 'Login failed: ' + error.message;
+  }
+});
+
+$('#fProfile').addEventListener('submit', async e => {
+  e.preventDefault();
+  const nick = $('#pNick').value.trim(), country = $('#pCountry').value;
+  if(!country){ $('#profMsg').textContent = 'Pick your country.'; return }
+  const { error } = await sb.from('profiles').insert({ id: S.user.id, nickname: nick, country });
+  if(error){ $('#profMsg').textContent = error.code === '23505' ? 'That nickname is taken. Try another one.' : 'Could not save: ' + error.message; return }
+  $('#dProfile').close(); $('#profMsg').textContent = ''; refreshUser();
+});
+
+/* ---------- submit ---------- */
+function fillSubmitCars(){
+  const isPC = (S.platforms.find(p => p.id === +$('#sPlat').value) || {}).slug === 'pc';
+  const keep = $('#sCar').value;
+  $('#sCar').innerHTML = '<option value="">Select a car…</option>' +
+    S.cars.map(c => `<option value="${c.id}">${esc(c.name)}${c.is_mod ? ' (mod)' : ''}</option>`).join('') +
+    (isPC ? '<option value="__new">+ My car is not listed</option>' : '');
+  if([...$('#sCar').options].some(o => o.value === keep)) $('#sCar').value = keep;
+  $('#newCar').classList.toggle('hidden', $('#sCar').value !== '__new');
+}
+$('#sPlat').addEventListener('change', fillSubmitCars);
+$('#sCar').addEventListener('change', () => $('#newCar').classList.toggle('hidden', $('#sCar').value !== '__new'));
+
+$('#btnSubmit').addEventListener('click', () => {
+  if(!S.user){ $('#dLogin').showModal(); return }
+  if(!S.profile){ $('#dProfile').showModal(); return }
+  $('#subMsg').textContent = ''; $('#dSubmit').showModal();
+});
+
+$('#fSubmit').addEventListener('submit', async e => {
+  e.preventDefault();
+  const msg = $('#subMsg'); msg.textContent = '';
+  const ms = parseTime($('#sTime').value);
+  if(!ms || ms < 300000 || ms > 1800000){ msg.textContent = 'Time must look like 7:21.345 and be between 5:00.000 and 30:00.000.'; return }
+  const vidRaw = $('#sVid').value.trim(), vid = vidRaw ? safeUrl(vidRaw) : null;
+  if(vidRaw && !vid){ msg.textContent = 'The video link must start with https://'; return }
+
+  let carId = $('#sCar').value;
+  if(!carId){ msg.textContent = 'Pick a car.'; return }
+  if(carId === '__new'){
+    const name = $('#sNewName').value.trim();
+    if(name.length < 3){ msg.textContent = 'Type the car name first.'; return }
+    const { data, error } = await sb.from('cars').insert({ game_id:S.game.id, name, is_official:false, is_mod:$('#sMod').checked, created_by:S.user.id }).select('id').single();
+    if(error){
+      const dup = S.cars.find(c => c.name.toLowerCase() === name.toLowerCase());
+      if(error.code === '23505' && dup) carId = dup.id;
+      else { msg.textContent = error.message.includes('Limita') ? 'You can add 5 new cars per day.' : 'Could not add the car: ' + error.message; return }
+    } else carId = data.id;
+  }
+  const { error } = await sb.from('submissions').insert({
+    user_id:S.user.id, game_id:S.game.id, layout_id:S.layout.id, platform_id:+$('#sPlat').value, car_id:+carId,
+    time_ms:ms, controller:$('#sCtrl').value, wheel_model:$('#sWheel').value.trim() || null,
+    abs:$('#sAbs').checked, tc:$('#sTc').checked, stability:$('#sSc').checked,
+    standard_followed:$('#sStd').checked, video_url:vid
+  });
+  if(error){ msg.textContent = 'Could not post the time: ' + error.message; return }
+  $('#dSubmit').close(); $('#fSubmit').reset(); await loadCars(); await loadBoard();
+});
+
+$('#fCar').addEventListener('change', loadBoard);
+$('#fPlat').addEventListener('change', loadBoard);
+init();
+</script>
+</body>
+</html>
