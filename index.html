@@ -168,7 +168,7 @@ const sb = supabase.createClient('https://spcvxrdazjruljbwfbay.supabase.co','sb_
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const S = { games:[], layouts:[], game:null, layout:null, platforms:[], cars:[], user:null, profile:null };
-const TABS = [['ac','Assetto Corsa','logo-ac.png'],['acc','Assetto Corsa Competizione','logo-acc.png'],['ace','Assetto Corsa EVO','logo-ace.png'],['gt7','Gran Turismo','logo-gt.png'],['lmu','Le Mans Ultimate','logo-lmu.png']];
+const TABS = [['ac','Assetto Corsa','logo-ac.png'],['acc','Assetto Corsa Competizione','logo-acc.png'],['ace','Assetto Corsa EVO','logo-ace.png'],['gt7','Gran Turismo','logo-gt.png'],['iracing','iRacing','logo-iracing.png']];
 const CTRL = { wheel_dd:'Direct drive wheel', wheel_belt:'Belt wheel', wheel_gear:'Gear wheel', gamepad:'Gamepad', keyboard:'Keyboard' };
 const CODES = 'AL AT BE BG BA BY CH CY CZ DE DK EE ES FI FR GB GR HR HU IE IS IT LT LU LV MD ME MK MT NL NO PL PT RO RS RU SE SI SK TR UA XK US CA MX BR AR CL CO PE VE UY AU NZ JP KR CN IN ID MY PH SG TH VN ZA EG MA NG KE IL AE SA QA'.split(' ');
 
@@ -283,10 +283,11 @@ $('#fProfile').addEventListener('submit', async e => {
 
 function fillSubmitCars(){
   const isPC = (S.platforms.find(p => p.id === +$('#sPlat').value) || {}).slug === 'pc';
+  const canAdd = isPC || (S.game && S.game.slug !== 'ac');
   const keep = $('#sCar').value;
   $('#sCar').innerHTML = '<option value="">Select a car…</option>' +
     S.cars.map(c => `<option value="${c.id}">${esc(c.name)}${c.is_mod ? ' (mod)' : ''}</option>`).join('') +
-    (isPC ? '<option value="__new">+ My car is not listed</option>' : '');
+    (canAdd ? '<option value="__new">+ My car is not listed</option>' : '');
   if([...$('#sCar').options].some(o => o.value === keep)) $('#sCar').value = keep;
   $('#newCar').classList.toggle('hidden', $('#sCar').value !== '__new');
 }
